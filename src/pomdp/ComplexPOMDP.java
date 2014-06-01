@@ -79,17 +79,50 @@ public class ComplexPOMDP {
     
     static boolean stats_activated = false;
     static boolean stats_output = false;
+    static boolean stats_print = false;
     static boolean singleAck_activated = false;
     static boolean output_values_activated = false;
     static boolean output_structure_activated = false;
     
+    static int PP =  2;
+    static int NN = -2;
+    static int PN =  1;
+    static int NP = -1;
+    static int type1;
+    static int type2;
+    static double diff11, diff12;
+    static double diff21, diff22;
+    
     public ComplexPOMDP(double a, double b, double c, double d, double e, double f, double g, double h, int size, int dec){
         SIZE = size;
         decimals = dec;
+        //a11, a12, a21, a22, b11, b12, b21, b22
         initialization(e, f, g, h, a, b, c, d);
+        //type1 = channel 1
+        diff11 = a - e; diff12 = b - f;
+        diff21 = c - g; diff22 = d - h;
+        if(a > e && b > f){
+            type1 = PP;
+        } else if(a > e && b < f){
+            type1 = PN;
+        } else if(a < e && b > f){
+            type1 = NP;
+        } else{
+            type1 = NN;
+        }
+        //type2 = channel 2
+        if(c > g && d > h){
+           type2 = PP; 
+        } else if(c > g && d < h){
+            type2 = PN;
+        } else if(c < g && d > h){
+            type2 = NP;
+        } else{
+            type2 = NN;
+        }
     }
     
-    public void execute(int testNum, String folder) throws IOException {
+    public int[][][][] execute(int testNum, String folder) throws IOException {
         
         double w11, w12, w21, w22;        
         
@@ -232,8 +265,8 @@ public class ComplexPOMDP {
                         }
                         //policy 4:         1                         1
                         //           -----------------     <>  -----------------
-                        //            1/Wt11  + 1/Wt12         1/Wt11  + 1/Wt12                        
-                        if(1/(1/wt11 + 1/wt12) >= 1/(1/wt21 + 1/wt22)){
+                        //            1/Wt11  + 1/Wt12         1/Wt21  + 1/Wt22                        
+                        if(1/((1/wt11) + (1/wt12)) >= 1/((1/wt21) + (1/wt22))){
                             p4_whittle_action_matrix[i][j][x][y] = SEND_1;
                         } else{
                             p4_whittle_action_matrix[i][j][x][y] = SEND_2;
@@ -263,16 +296,19 @@ public class ComplexPOMDP {
         //SAVE: ACTION_MATRIX, MYOPIC_ACTION_MATRIX, P1/P2/P3_WHITTLE_ACTION_MATRIX for later use
         fw_struct.close();
         fw_vals.close();
-                        
-        System.out.println("Computed Bellman Error: " + bellman_error);
-        System.out.println("Computed Myopic Bellman Error: " + myopic_bellman_error);
+         
+        if(stats_print){
+            System.out.println("Computed Bellman Error: " + bellman_error);
+            System.out.println("Computed Myopic Bellman Error: " + myopic_bellman_error);
+        }
         
         if(stats_activated){
             Stats stats = new Stats();
             stats.prepare_complex(SIZE, action_matrix, myopic_action_matrix, p1_whittle_action_matrix, p2_whittle_action_matrix, p3_whittle_action_matrix, p4_whittle_action_matrix);
-            stats.calculate_scores_complex(stats_output, singleAck_activated, folder);
+            stats.calculate_scores_complex(diff11, diff12, diff21, diff22, type1, type2, stats_print, stats_output, singleAck_activated, folder);
         }
         
+        return action_matrix;
     }    
         
     void activate_singleAck(){
@@ -290,6 +326,9 @@ public class ComplexPOMDP {
     void output_stats(){
         stats_output = true;
     }    
+    void print_stats(){
+        stats_print = true;
+    }
     static double getV(double w11, double w12, double w21, double w22){        
         return matrix[(int)(round(w11) * decimals)][(int)(round(w12) * decimals)][(int)(round(w21) * decimals)][(int)(round(w22) * decimals)];      
     }

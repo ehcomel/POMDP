@@ -3,10 +3,15 @@ package pomdp;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,24 +46,248 @@ public class Stats {
         
     }
     
+    void compare1ACK(int[][][][] _4D, int[][] _2D){
+        FileWriter fw = null;
+        try {
+            double w11, w12, w21, w22;
+            double w1, w2;
+            int m, n;
+            Map<String,ArrayList<Integer>> comp = new HashMap<>();
+            //key: value: []
+            // (0.2, 0.3) : [1,1,0,0,0,1,1,1,1,1,0,0,0,0]
+            for(int i = 0; i < 11; i++){
+                w11 = (double)i/10.0;
+                for(int j = 0; j < 11; j++){
+                    w12 = (double)j/10.0;
+                    for(int k = 0; k < 11; k++){
+                        w21 = (double)k/10.0;
+                        for(int l = 0; l < 11; l++){
+                            w22 = (double)l/10.0;
+                            DecimalFormat df = new DecimalFormat("#.##");
+                            //System.out.print("w11: " + w11 + " w12: " + w12 + " w21: " + w21 + " w22: " + w22);
+                            w1 = w11 * w12;
+                            w2 = w21 * w22;
+                            //System.out.print(" / w1: " + w1 + " w2: " + w2);
+                            //System.out.println(" / w1: " + df.format(w1) + " w2: " + df.format(w2));
+                            m = (int)(w1 * 100);
+                            n = (int)(w2 * 100);
+                            int x = _4D[i][j][k][l];
+                            int y = _2D[m][n];
+                            String key = df.format(w1) + "-" + df.format(w2);
+                            if(!comp.containsKey(key)){
+                                ArrayList<Integer> a = new ArrayList<>();
+                                a.add(y);
+                                a.add(x);
+                                comp.put(key, a);
+                            } else{
+                                comp.get(key).add(x);
+                            }
+                        }
+                    }
+                }
+            }   double total = 0;
+            int line_total = 0;
+            int count = 0;
+            int count_line = 0;
+            int count2 = 0;
+            double total2 = 0;
+            int individual_total = 0;
+            Iterator<String> iterator = comp.keySet().iterator();
+            while(iterator.hasNext()){
+                line_total = 0;
+                count_line = 0;
+                count++;
+                String ink = iterator.next();
+                //System.out.print("(" + ink + "): ");
+                Iterator<Integer> it = comp.get(ink).iterator();
+                int s2d = it.next();
+                //System.out.print("(" + s2d + ") [");
+                while(it.hasNext()) {
+                    count_line++;
+                    int f = it.next();
+                    //System.out.print(f+",");
+                    if(s2d == f){
+                        line_total++;
+                    }
+                }
+                individual_total += line_total;
+                double line_avg = 100.0 * (double)line_total/(double)count_line;
+                //System.out.println("], avg: " + line_avg + "% (" + count_line + ")");
+                total += line_avg * count_line;
+                count += count_line;
+                total2 += line_avg;
+                count2++;
+            }   
+            double weighted_mean = total/(double)count;
+            double mean = total2 / (double)count2;
+            DecimalFormat df = new DecimalFormat("#.##");
+            //System.out.println("===============================================================");
+//System.out.println("Weighted Arithmetic Avg:" + weighted_mean + " % - Arithmetic Avg:" + mean + " %");
+            //System.out.println("===============================================================");
+            File file2 = new File("comparison.txt");
+            fw = new FileWriter(file2.getAbsolutePath(),true);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(df.format(weighted_mean) + "\t" + df.format(mean) + "\n");
+            bw.close();
+            fw.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                fw.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
+    void analyze_2D_4D_file(String filepath){
+        try {
+            double sum_myo = 0, sum_myo_p = 0, sum_myo_n = 0, sum_myo_0 = 0, sum_myo_1 = 0, sum_myo_2 = 0, sum_myo_3 = 0, sum_myo_4 = 0;
+            double sum_wam = 0, sum_wam_p = 0, sum_wam_n = 0, sum_wam_0 = 0, sum_wam_1 = 0, sum_wam_2 = 0, sum_wam_3 = 0, sum_wam_4 = 0;
+            double sum_am  = 0, sum_am_p  = 0, sum_am_n  = 0, sum_am_0  = 0, sum_am_1  = 0, sum_am_2 = 0, sum_am_3  = 0, sum_am_4  = 0;            
+            int count = 0, count_p = 0, count_n = 0, count_0 = 0, count_1 = 0, count_2 = 0, count_3 = 0, count_4 = 0;
+            int count_treshhold1 = 0;
+            String line;
+            BufferedReader br = new BufferedReader(new FileReader(filepath));
+            while ((line = br.readLine()) != null) {
+                int positive_channels = 0;
+                count++;
+                StringTokenizer st = new StringTokenizer(line.replaceAll(",", "."));
+                //differences of parameters
+                String params = st.nextToken().replaceAll("\\(", "").replaceAll("\\)", "").replaceAll("/", " ");
+                StringTokenizer stp = new StringTokenizer(params);
+                double sum_params = 0;
+                while(stp.hasMoreTokens()){
+                    double d = Double.parseDouble(stp.nextToken());
+                    sum_params += d;
+                    if(d>0){
+                        positive_channels++;
+                    }
+                }
+                //percentage Myopic 4D   
+                double t = Double.parseDouble(st.nextToken());
+                sum_myo += t;
+                if(sum_params>=0){
+                    sum_myo_p += t;
+                    count_p++;
+                } else{
+                    sum_myo_n += t;
+                    count_n++;
+                }
+                if(positive_channels == 0){
+                    sum_myo_0 += t;
+                    count_0++;
+                } else if(positive_channels == 1){
+                    sum_myo_1 += t;
+                    count_1++;
+                } else if(positive_channels == 2){
+                    sum_myo_2 += t;
+                    count_2++;
+                } else if(positive_channels == 3){
+                    sum_myo_3 += t;
+                    count_3++;
+                } else{
+                    sum_myo_4 += t;
+                    count_4++;
+                }
+                //test ranges in which performances are above a certain treshold
+                if(t > 80){
+                    System.out.println(params + " : " + t);
+                    count_treshhold1++;
+                }
+                //differences of approx. parameters
+                st.nextToken();
+                //weighted arithmetic mean percentage 2D
+                t = Double.parseDouble(st.nextToken());
+                sum_wam += t;
+                if(sum_params>=0){
+                    sum_wam_p += t;
+                } else{
+                    sum_wam_n += t;
+                }
+                if(positive_channels == 0){
+                    sum_wam_0 += t;
+                } else if(positive_channels == 1){
+                    sum_wam_1 += t;
+                } else if(positive_channels == 2){
+                    sum_wam_2 += t;
+                } else if(positive_channels == 3){
+                    sum_wam_3 += t;
+                } else{
+                    sum_wam_4 += t;
+                }
+                //arithmetic mean percentage 2D
+                t = Double.parseDouble(st.nextToken());
+                sum_am += t;
+                if(sum_params>=0){
+                    sum_am_p += t;
+                } else{
+                    sum_am_n += t;
+                }
+                if(positive_channels == 0){
+                    sum_am_0 += t;
+                } else if(positive_channels == 1){
+                    sum_am_1 += t;
+                } else if(positive_channels == 2){
+                    sum_am_2 += t;
+                } else if(positive_channels == 3){
+                    sum_am_3 += t;
+                } else{
+                    sum_am_4 += t;
+                }
+            }
+            System.out.println("Over Treshhold: " + count_treshhold1);
+            System.out.println("====================================");
+            System.out.println("Avg Myopic 4D = " + (sum_myo/(double)count) + "\tWeighted Avg 2D = " + (sum_wam/(double)count) + "\tAvg 2D = " + (sum_am/(double)count));
+            System.out.println("====================================");
+            System.out.print("Positive: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_p/(double)count_p) + "\tWeighted Avg 2D = " + (sum_wam_p/(double)count_p) + "\tAvg 2D = " + (sum_am_p/(double)count_p));
+            System.out.print("Negative: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_n/(double)count_n) + "\tWeighted Avg 2D = " + (sum_wam_n/(double)count_n) + "\tAvg 2D = " + (sum_am_n/(double)count_n));
+            System.out.println("====================================");
+            System.out.print("0 Positive Channels: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_0/(double)count_0) + "\tWeighted Avg 2D = " + (sum_wam_0/(double)count_0) + "\tAvg 2D = " + (sum_am_0/(double)count_0));
+            System.out.print("1 Positive Channels: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_1/(double)count_1) + "\tWeighted Avg 2D = " + (sum_wam_1/(double)count_1) + "\tAvg 2D = " + (sum_am_1/(double)count_1));
+            System.out.print("2 Positive Channels: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_2/(double)count_2) + "\tWeighted Avg 2D = " + (sum_wam_2/(double)count_2) + "\tAvg 2D = " + (sum_am_2/(double)count_2));
+            System.out.print("3 Positive Channels: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_3/(double)count_3) + "\tWeighted Avg 2D = " + (sum_wam_3/(double)count_3) + "\tAvg 2D = " + (sum_am_3/(double)count_3));
+            System.out.print("4 Positive Channels: ");
+            System.out.println("Avg Myopic 4D = " + (sum_myo_4/(double)count_4) + "\tWeighted Avg 2D = " + (sum_wam_4/(double)count_4) + "\tAvg 2D = " + (sum_am_4/(double)count_4));
+            
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     void analyze_simple_file(String filepath){
         BufferedReader br = null;
         int myopic_count = 0, whittle_count = 0;
         int total = 0;
-        double myopic_sum = 0, whittle_sum = 0;
+        double myopic_sum = 0, whittle_sum = 0, diff_sum = 0;
         try {
             String line;
             br = new BufferedReader(new FileReader(filepath));
             line = br.readLine();
             while ((line = br.readLine()) != null) {
+                //line = line.replaceAll(",", ".");
                 total++;
                 StringTokenizer st = new StringTokenizer(line);
-                StringTokenizer inner_st = new StringTokenizer(st.nextToken(), "%");
+                //the parameters token
+                st.nextToken();
+                //the percentages tokens                
+                StringTokenizer inner_st = new StringTokenizer(st.nextToken().replaceAll(",", "."), "%");
                 double myo = Double.parseDouble(inner_st.nextToken());                  
                 myopic_sum += myo;
-                inner_st = new StringTokenizer(st.nextToken(), "%");
+                inner_st = new StringTokenizer(st.nextToken().replaceAll(",", "."), "%");
                 double whittle = Double.parseDouble(inner_st.nextToken());
                 whittle_sum += whittle;
+                double diff = myo - whittle;
+                diff_sum += diff;
                 if(myo > whittle){
                     myopic_count++;
                 } else{
@@ -67,6 +296,10 @@ public class Stats {
             }
             DecimalFormat df = new DecimalFormat("#.##");            
             System.out.println("Myopic: " + myopic_count + " (" + df.format((double)myopic_count*100/(double)total) + "%) Avg.: " + (double)myopic_sum/(double)total + " - Whittle: " + whittle_count + " (" + df.format((double)whittle_count*100/(double)total) + "%) Avg.: " + (double)whittle_sum/(double)total);
+            String winner = "";
+            if(diff_sum>0) winner = "MYOPIC";
+            else winner = "WHITTLE";
+            System.out.println("Avg. Diff: " + diff_sum/(double)total + "(" + winner + ")");
         } catch (IOException e) {
         } finally {
             try {
@@ -84,10 +317,12 @@ public class Stats {
         try {
             String line;
             br = new BufferedReader(new FileReader(filepath));
-            line = br.readLine();
+            line = br.readLine();            
             while ((line = br.readLine()) != null) {
+                line = line.replaceAll(",", ".");
                 total++;
                 StringTokenizer st = new StringTokenizer(line);
+                st.nextToken();
                 StringTokenizer inner_st = new StringTokenizer(st.nextToken(), "%");
                 double myo = Double.parseDouble(inner_st.nextToken());                  
                 myopic_sum += myo;
@@ -143,7 +378,7 @@ public class Stats {
         p4 = d;                
     }
     
-    void calculate_scores_simple(boolean print, boolean output, boolean singleAck, String folder){
+    void calculate_scores_simple(int type, boolean print, boolean output, boolean singleAck, String folder, double a1, double b1, double a2, double b2){
         
         int scoreM, scoreW;
         scoreM = scoreW = 0;
@@ -179,12 +414,22 @@ public class Stats {
             String newLine = System.getProperty("line.separator");
             try{
                 String filename;
-                if(!singleAck){
-                    filename = folder + "STATS_SIMPLE.txt";
+                String ext;
+                if(type == 2){
+                    ext = "PP";
+                } else if(type == -2){
+                    ext = "NN";
+                } else if(type == 1){
+                    ext = "PN";
                 } else{
-                    filename = folder + "STATS_SIMPLE_1ACK.txt";
+                    ext = "NP";
                 }
-                File file =new File(filename);
+                if(!singleAck){
+                    filename = folder + "STATS_SIMPLE_" + ext + ".txt";
+                } else{
+                    filename = folder + "STATS_SIMPLE_1ACK_" + ext + ".txt";
+                }
+                File file = new File(filename);
     		if(!file.exists()){
                     file.createNewFile();
                     NEW = true;
@@ -193,10 +438,10 @@ public class Stats {
                 FileWriter fileWritter = new FileWriter(file.getAbsolutePath(), true);
                 try (BufferedWriter bufferWritter = new BufferedWriter(fileWritter)) {
                     if(NEW){
-                        String header = "MYOPIC\tWHITTLE" + newLine;
+                        String header = "PARAMS\t\tMYOPIC\tWHITTLE" + newLine;
                         bufferWritter.write(header);
                     }
-                    String line = "" + df.format(perM) + "%\t" + df.format(perW) + "%" + newLine;
+                    String line = "α1:" + a1 + ",1-ß1:" + b1 +",α2:" + a2 + ",1-ß2:" + b2 + ",\t" + df.format(perM) + "%\t" + df.format(perW) + "%" + newLine;
                     bufferWritter.write(line);
                     bufferWritter.close();
                     fileWritter.close();
@@ -210,7 +455,7 @@ public class Stats {
         
     }
     
-    void calculate_scores_complex(boolean output, boolean singleAck, String folder){
+    void calculate_scores_complex(double diff11, double diff12, double diff21, double diff22, int type1, int type2, boolean print, boolean output, boolean singleAck, String folder){
         int score1, score2, score3, score4, scoreMyopic;
         score1 = score2 = score3 = score4 = scoreMyopic = 0;
         
@@ -246,26 +491,47 @@ public class Stats {
         double per4 = (double)(score4 * 100)/total;
         DecimalFormat df = new DecimalFormat("#.##");
         
-        System.out.println();
-        System.out.println("----------------------------------------------------");
-        System.out.println("            SCORES COMPARISON: COMPLEX           ");
-        System.out.println("Total  : " + (int)total);
-        System.out.println("Score M: " + scoreMyopic + " - Percentage = " + df.format(perM) + "%");
-        System.out.println("Score 1: " + score1 + " - Percentage = " + df.format(per1) + "%");
-        System.out.println("Score 2: " + score2 + " - Percentage = " + df.format(per2) + "%");
-        System.out.println("Score 3: " + score3 + " - Percentage = " + df.format(per3) + "%");
-        System.out.println("Score 4: " + score4 + " - Percentage = " + df.format(per4) + "%");  
-        System.out.println("----------------------------------------------------");
+        if(print){
+            System.out.println();
+            System.out.println("----------------------------------------------------");
+            System.out.println("            SCORES COMPARISON: COMPLEX           ");
+            System.out.println("Total  : " + (int)total);
+            System.out.println("Score M: " + scoreMyopic + " - Percentage = " + df.format(perM) + "%");
+            System.out.println("Score 1: " + score1 + " - Percentage = " + df.format(per1) + "%");
+            System.out.println("Score 2: " + score2 + " - Percentage = " + df.format(per2) + "%");
+            System.out.println("Score 3: " + score3 + " - Percentage = " + df.format(per3) + "%");
+            System.out.println("Score 4: " + score4 + " - Percentage = " + df.format(per4) + "%");  
+            System.out.println("----------------------------------------------------");
+        }
     
         if(output){
             boolean NEW = false;
             String newLine = System.getProperty("line.separator");
             try{
                 String filename;
-                if(!singleAck){
-                    filename = folder + "STATS_COMPLEX.txt";
+                String ext1, ext2;
+                if(type1 == 2){
+                    ext1 = "PP";
+                } else if(type1 == -2){
+                    ext1 = "NN";
+                } else if(type1 == 1){
+                    ext1 = "PN";
                 } else{
-                    filename = folder + "STATS_COMPLEX_1ACK.txt";
+                    ext1 = "NP";
+                }
+                if(type2 == 2){
+                    ext2 = "PP";
+                } else if(type2 == -2){
+                    ext2 = "NN";
+                } else if(type2 == 1){
+                    ext2 = "PN";
+                } else{
+                    ext2 = "NP";
+                }
+                if(!singleAck){
+                    filename = folder + "STATS_COMPLEX_" + ext1 + ext2 + ".txt";
+                } else{
+                    filename = folder + "STATS_COMPLEX_1ACK_" + ext1 + ext2 + ".txt";
                 }
                 File file = new File(filename);
     		if(!file.exists()){
@@ -279,12 +545,17 @@ public class Stats {
                         String header = "MYOP\tP1\tP2\tP3\tP4" + newLine;
                         bufferWritter.write(header);
                     }
-                    String line = "" + df.format(perM) + "%\t" + df.format(per1) + "%\t" + df.format(per2) + "%\t" + df.format(per3) + "%\t" + df.format(per4) + "%" + newLine;
+                    String line = "" + df.format(diff11) + "/" + df.format(diff12) + "/" + df.format(diff21) + "/" + df.format(diff22) + "\t" + df.format(perM) + "%\t" + df.format(per1) + "%\t" + df.format(per2) + "%\t" + df.format(per3) + "%\t" + df.format(per4) + "%" + newLine;
                     bufferWritter.write(line);
                     bufferWritter.close();
                     fileWritter.close();
                 }
-                
+                File file2 = new File("comparison.txt");
+                FileWriter fw = new FileWriter(file2.getAbsolutePath(),true);
+                BufferedWriter bw = new BufferedWriter(fw);
+                bw.write(df.format(perM));
+                bw.close();
+                fw.close();
             } catch (IOException ex) {
                 Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
             }            

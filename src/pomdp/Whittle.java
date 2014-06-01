@@ -32,7 +32,7 @@ public class Whittle {
     }
     
     public double calculate_index(double p){
-        double k = k(p);
+        //double k = k(p);
         double index = 0.0;
         
         if(s == 0){

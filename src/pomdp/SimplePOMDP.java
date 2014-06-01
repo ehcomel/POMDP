@@ -95,13 +95,30 @@ public class SimplePOMDP {
     static boolean output_values_activated = false;
     static boolean output_structure_activated = false;
     
+    static int PP =  2;
+    static int NN = -2;
+    static int PN =  1;
+    static int NP = -1;
+    
+    static int type;
+    
     public SimplePOMDP(double a, double b, double c, double d, int size, int dec){
         SIZE = size;
         decimals = dec;
+        //1-b, a 
         initialization(a, b, c, d);
+        if(a > b && c > d){
+            type = PP;
+        } else if(a > b && c < d){
+            type = PN;            
+        } else if(a < b && c > d){
+            type = NP;
+        } else{
+            type = NN;
+        }
     }
     
-    public void execute(int testNum, String folder) throws IOException {
+    public int[][] execute(int testNum, String folder) throws IOException {
         
         double w1, w2;
         double outcome_1, outcome_2, outcome_1_0, outcome_1_1, outcome_2_0, outcome_2_1, max_outcome;
@@ -146,21 +163,7 @@ public class SimplePOMDP {
                   
                     next_step_matrix[i][j] = max_outcome;
                     action_matrix[i][j] = clock_action;
-                    //System.out.println("Clock: "+ clock + ", (w1: " + w1 + ", w2: " + w2 + "), V: " + max_outcome + ", Action: " + clock_action + "- Before - V: " + matrix[i][j]);
-                    /*  
-                    V_1 = calculate_V1(w1, w2);
-                    V_2 = calculate_V2(w1, w2);
-                    if(V_1 >= V_2){
-                        //choose channel one then update
-                        next_step_matrix[i][j] = V_1;
-                        action_matrix[i][j] = SEND_1;
-                    } else{
-                        //choose channel two then update
-                        next_step_matrix[i][j] = V_2;
-                        action_matrix[i][j] = SEND_2;
-                    }
-                    */
-                    
+                  
                     //MYOPIC POLICY
                     if(w1 >= w2){
                         next_step_myopic_matrix[i][j] = calculate_V1(w1, w2);
@@ -168,17 +171,7 @@ public class SimplePOMDP {
                     } else{
                         next_step_myopic_matrix[i][j] = calculate_V2(w1, w2);
                         myopic_action_matrix[i][j] = SEND_2;
-                    }
-                    
-                    
-                    //whittle index
-                    /*
-                        R is reward
-                        f^n(p) is n-recursive Tao(n)
-                        alpha is discount factor
-                        
-                    */
-                    
+                    }                 
                 }
             }            
         }
@@ -267,7 +260,7 @@ public class SimplePOMDP {
         if(stats_activated){
             Stats stats = new Stats();
             stats.prepare_simple(SIZE, _3DMatrix, myopic_3DMatrix, whittle_3DMatrix);
-            stats.calculate_scores_simple(stats_print, stats_output, singleAck_activated, folder);
+            stats.calculate_scores_simple(type, stats_print, stats_output, singleAck_activated, folder, p1_01, p1_11, p2_01, p2_11);
         }
         
         // 3D PLOTING OF THE MATRICES
@@ -304,7 +297,7 @@ public class SimplePOMDP {
             myframe.setVisible(true);
         }
             
-        
+        return action_matrix;
     }    
     
     void print_stats(){
