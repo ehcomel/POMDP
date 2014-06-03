@@ -264,6 +264,218 @@ public class Stats {
         }
     }
     
+    void analyze_full_correlation_4D(String filepath, int typefile){
+        //prepare ranges
+        /*double[] positive_ranges = {0.0, 0.1, 0.3, 0.5, 0.7, 1.0};
+        double[] negative_ranges = {-1.0, -0.7, -0.5, -0.3, -0.1, 0.0};*/
+        //Read file PPPP or NNNN        
+        try {
+            String line;
+            double sum1_1 = 0; double sum2_1 = 0; double sum3_1 = 0; double sum4_1 = 0; double sum5_1 = 0;
+            double sum1_2 = 0; double sum2_2 = 0; double sum3_2 = 0; double sum4_2 = 0; double sum5_2 = 0;
+            double sum1_3 = 0; double sum2_3 = 0; double sum3_3 = 0; double sum4_3 = 0; double sum5_3 = 0;
+            double sum1_4 = 0; double sum2_4 = 0; double sum3_4 = 0; double sum4_4 = 0; double sum5_4 = 0;
+            double sum1_5 = 0; double sum2_5 = 0; double sum3_5 = 0; double sum4_5 = 0; double sum5_5 = 0;
+            int count1 = 0; int count2 = 0; int count3 = 0; int count4 = 0; int count5 = 0;
+            
+            BufferedReader br = new BufferedReader(new FileReader(filepath));
+            br.readLine();
+            while ((line = br.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(line);
+                //Token 1: diff. params /*prepare treshold ranges */
+                String params = st.nextToken().replaceAll(",", ".");
+                StringTokenizer pt = new StringTokenizer(params, "/");
+                double d11, d12, d21, d22;
+                d11 = Double.parseDouble(pt.nextToken());
+                d12 = Double.parseDouble(pt.nextToken());
+                d21 = Double.parseDouble(pt.nextToken());
+                d22 = Double.parseDouble(pt.nextToken());
+                //Tokens: remove %
+                double myo = Double.parseDouble(st.nextToken().replaceAll(",", ".").replaceAll("%", ""));
+                double p1  = Double.parseDouble(st.nextToken().replaceAll(",", ".").replaceAll("%", ""));
+                double p2  = Double.parseDouble(st.nextToken().replaceAll(",", ".").replaceAll("%", ""));
+                double p3  = Double.parseDouble(st.nextToken().replaceAll(",", ".").replaceAll("%", ""));
+                double p4  = Double.parseDouble(st.nextToken().replaceAll(",", ".").replaceAll("%", ""));
+                
+                if(typefile == 1){
+                    if(d11 <= 0.3 && d12 <= 0.3 && d21 <= 0.3 && d22 <= 0.3){
+                        sum1_1 += myo; sum2_1 += p1; sum3_1 += p2; sum4_1 += p3; sum5_1 += p4;
+                        count1++;
+                    } else if((0.2 < d11 && d11 <= 0.4)&&(0.2 < d12 && d12 <= 0.4)&&(0.2 < d21 && d21 <= 0.4)&&(0.2 < d22 && d22 <= 0.4)){
+                        sum1_2 += myo; sum2_2 += p1; sum3_2 += p2; sum4_2 += p3; sum5_2 += p4;
+                        count2++;
+                    } else if((0.35 < d11 && d11 <= 0.7)&&(0.35 < d12 && d12 <= 0.7)&&(0.35 < d21 && d21 <= 0.7)&&(0.35 < d22 && d22 <= 0.7)){
+                        sum1_3 += myo; sum2_3 += p1; sum3_3+= p2; sum4_3 += p3; sum5_3 += p4;
+                        count3++;
+                    }/* else if((0.5 < d11 && d11 <= 0.7)&&(0.5 < d12 && d12 <= 0.7)&&(0.5 < d21 && d21 <= 0.7)&&(0.5 < d22 && d22 <= 0.7)){
+                        sum1_4 += myo; sum2_4 += p1; sum3_4 += p2; sum4_4 += p3; sum5_4 += p4;
+                        count4++;
+                    } else if(0.7 < d11 && 0.7 < d12 && 0.7 < d21 && 0.7 < d22){
+                        sum1_5 += myo; sum2_5 += p1; sum3_5 += p2; sum4_5 += p3; sum5_5 += p4;
+                        count5++;
+                    }*/ else if(0.4 < d11 && 0.4 < d12 && 0.4 < d21 && 0.4 < d22){
+                        sum1_5 += myo; sum2_5 += p1; sum3_5 += p2; sum4_5 += p3; sum5_5 += p4;
+                        count5++;
+                    }
+                } else if(typefile == -1){
+                    //TODO: NNNN FILE RANGES AND STUFF
+                }
+            }
+            DecimalFormat df = new DecimalFormat("#.##");
+            double d1, d2, d3, d4, d5;
+            d1 = sum1_1/(double)count1;
+            d2 = sum2_1/(double)count1;
+            d3 = sum3_1/(double)count1;
+            d4 = sum4_1/(double)count1;
+            d5 = sum5_1/(double)count1;
+            System.out.print("Range 1: ");
+            System.out.println("(Count:" + count1 + ") My:" + df.format(d1) + "\tP1:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tP2:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)\tP3:" + df.format(d4) + " (" + df.format(percentage_differance(d1, d4)) + "%)\tP4:" + df.format(d5) + "(" + df.format(percentage_differance(d1, d5)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_2/(double)count2;
+            d2 = sum2_2/(double)count2;
+            d3 = sum3_2/(double)count2;
+            d4 = sum4_2/(double)count2;
+            d5 = sum5_2/(double)count2;
+            System.out.print("Range 2: ");
+            System.out.println("(Count:" + count2 + ") My:" + df.format(d1) + "\tP1:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tP2:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)\tP3:" + df.format(d4) + " (" + df.format(percentage_differance(d1, d4)) + "%)\tP4:" + df.format(d5) + "(" + df.format(percentage_differance(d1, d5)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_3/(double)count3;
+            d2 = sum2_3/(double)count3;
+            d3 = sum3_3/(double)count3;
+            d4 = sum4_3/(double)count3;
+            d5 = sum5_3/(double)count3;
+            System.out.print("Range 3: ");
+            System.out.println("(Count:" + count3 + ") My:" + df.format(d1) + "\tP1:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tP2:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)\tP3:" + df.format(d4) + " (" + df.format(percentage_differance(d1, d4)) + "%)\tP4:" + df.format(d5) + "(" + df.format(percentage_differance(d1, d5)) + "%)");
+            System.out.println("=================================");
+            /*d1 = sum1_4/(double)count4;
+            d2 = sum2_4/(double)count4;
+            d3 = sum3_4/(double)count4;
+            d4 = sum4_4/(double)count4;
+            d5 = sum5_4/(double)count4;
+            System.out.print("Range 4: ");
+            System.out.println("(Count:" + count4 + ") My:" + df.format(d1) + "\tP1:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tP2:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)\tP3:" + df.format(d4) + " (" + df.format(percentage_differance(d1, d4)) + "%)\tP4:" + df.format(d5) + "(" + df.format(percentage_differance(d1, d5)) + "%)");
+            System.out.println("=================================");*/
+            d1 = sum1_5/(double)count5;
+            d2 = sum2_5/(double)count5;
+            d3 = sum3_5/(double)count5;
+            d4 = sum4_5/(double)count5;
+            d5 = sum5_5/(double)count5;
+            System.out.print("Range 5: ");
+            System.out.println("(Count:" + count5 + ") My:" + df.format(d1) + "\tP1:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tP2:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)\tP3:" + df.format(d4) + " (" + df.format(percentage_differance(d1, d4)) + "%)\tP4:" + df.format(d5) + "(" + df.format(percentage_differance(d1, d5)) + "%)");
+            System.out.println("=================================");
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        }
+            
+    }
+    
+    void analyze_full_correlation_2D(String filepath, int typefile){
+        BufferedReader br = null;
+        try {
+            //Read file PP or NN
+            String line;
+            double sum1_1 = 0; double sum2_1 = 0; double sum3_1 = 0;
+            double sum1_2 = 0; double sum2_2 = 0; double sum3_2 = 0;
+            double sum1_3 = 0; double sum2_3 = 0; double sum3_3 = 0;
+            double sum1_4 = 0; double sum2_4 = 0; double sum3_4 = 0;
+            double sum1_5 = 0; double sum2_5 = 0; double sum3_5 = 0;
+            int count1 = 0; int count2 = 0; int count3 = 0; int count4 = 0; int count5 = 0;
+            int count = 0;
+            br = new BufferedReader(new FileReader(filepath));
+            boolean allPositive = true;
+            while ((line = br.readLine()) != null) {
+                allPositive = true;
+                int positive_channels = 0;
+                count++;
+                StringTokenizer st = new StringTokenizer(line.replaceAll(",", "."));
+                //differences of parameters
+                String params = st.nextToken().replaceAll("\\(", "").replaceAll("\\)", "").replaceAll("/", " ");
+                StringTokenizer stp = new StringTokenizer(params);
+                double d11=0, d12=0, d21=0, d22=0;
+                while(stp.hasMoreTokens()){
+                    d11 = Double.parseDouble(stp.nextToken());
+                    d12 = Double.parseDouble(stp.nextToken());
+                    d21 = Double.parseDouble(stp.nextToken());
+                    d22 = Double.parseDouble(stp.nextToken());
+                    if(d11<0 || d12<0 || d21<0 || d22<0){
+                        allPositive = false;
+                        break;
+                    }
+                }
+                if(allPositive){
+                    double myo = Double.parseDouble(st.nextToken());
+                    st.nextToken();
+                    double opt_wam = Double.parseDouble(st.nextToken());
+                    double opt_am = Double.parseDouble(st.nextToken());
+                    
+                    if(d11 <= 0.2 && d12 <= 0.2 && d21 <= 0.2 && d22 <= 0.2){
+                        sum1_1 += myo; sum2_1 += opt_wam; sum3_1 += opt_am;
+                        count1++;
+                    } else if((0.2 < d11 && d11 <= 0.4)&&(0.2 < d12 && d12 <= 0.4)&&(0.2 < d21 && d21 <= 0.4)&&(0.2 < d22 && d22 <= 0.4)){
+                        sum1_2 += myo; sum2_2 += opt_wam; sum3_2 += opt_am;
+                        count2++;
+                    } /*else if((0.3 < d11 && d11 <= 0.8)&&(0.3 < d12 && d12 <= 0.8)&&(0.3 < d21 && d21 <= 0.8)&&(0.3 < d22 && d22 <= 0.8)){
+                        sum1_3 += myo; sum2_3 += opt_wam; sum3_3+= opt_am;
+                        count3++;
+                    } else if((0.5 < d11 && d11 <= 0.7)&&(0.5 < d12 && d12 <= 0.7)&&(0.5 < d21 && d21 <= 0.7)&&(0.5 < d22 && d22 <= 0.7)){
+                        sum1_4 += myo; sum2_4 += opt_wam; sum3_4 += opt_am;
+                        count4++;
+                    } */else if(0.3 < d11 && 0.3 < d12 && 0.3 < d21 && 0.3 < d22){
+                        sum1_5 += myo; sum2_5 += opt_wam; sum3_5 += opt_am;
+                        count5++;
+                    } /*else if(0.4 < d11 && 0.4 < d12 && 0.4 < d21 && 0.4 < d22){
+                        sum1_5 += myo; sum2_5 += opt_wam; sum3_5 += opt_am;
+                        count5++;
+                    }*/
+                }
+            }
+            DecimalFormat df = new DecimalFormat("#.##");
+            double d1, d2, d3, d4, d5;
+            d1 = sum1_1/(double)count1;
+            d2 = sum2_1/(double)count1;
+            d3 = sum3_1/(double)count1;            
+            System.out.print("Range 1: ");
+            System.out.println("(Count:" + count1 + ") My:" + df.format(d1) + "\tOPT_WAM:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tOP_AM:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_2/(double)count2;
+            d2 = sum2_2/(double)count2;
+            d3 = sum3_2/(double)count2;
+            System.out.print("Range 2: ");
+            System.out.println("(Count:" + count2 + ") My:" + df.format(d1) + "\tOPT_WAM:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tOP_AM:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_3/(double)count3;
+            d2 = sum2_3/(double)count3;
+            d3 = sum3_3/(double)count3;
+            System.out.print("Range 3: ");
+            System.out.println("(Count:" + count3 + ") My:" + df.format(d1) + "\tOPT_WAM:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tOP_AM:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_4/(double)count4;
+            d2 = sum2_4/(double)count4;
+            d3 = sum3_4/(double)count4;
+            System.out.print("Range 4: ");
+            System.out.println("(Count:" + count4 + ") My:" + df.format(d1) + "\tOPT_WAM:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tOP_AM:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)");
+            System.out.println("=================================");
+            d1 = sum1_5/(double)count5;
+            d2 = sum2_5/(double)count5;
+            d3 = sum3_5/(double)count5;
+            System.out.print("Range 5: ");
+            System.out.println("(Count:" + count5 + ") My:" + df.format(d1) + "\tOPT_WAM:" + df.format(d2) + " (" + df.format(percentage_differance(d1, d2)) + "%)\tOP_AM:" + df.format(d3) + " (" + df.format(percentage_differance(d1, d3)) + "%)");
+            System.out.println("=================================");
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {                
+                br.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Stats.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+    
     void analyze_simple_file(String filepath){
         BufferedReader br = null;
         int myopic_count = 0, whittle_count = 0;
@@ -561,4 +773,9 @@ public class Stats {
             }            
         }        
     }
+    
+    double percentage_differance(double a, double b){
+        return (Math.abs(a-b)/((a+b)/2.0))*100.0;
+    }
+    
 }

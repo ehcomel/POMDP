@@ -67,6 +67,10 @@ public class SimplePOMDP {
     static double [][] myopic_3DMatrix = new double[SIZE][SIZE];
     static double [][] whittle_3DMatrix = new double[SIZE][SIZE];
     
+    //new metric: percent difference
+    static double [][] opt_myo_diff = new double [SIZE][SIZE]; //matrix vs myopic matrix
+    //static double [][] opt_whi_diff = new double [SIZE][SIZE]; //matrix vs Whittle ? how ?
+    
     //ACTIONS
     static int SEND_1 = 1;
     static int SEND_2 = 2;
